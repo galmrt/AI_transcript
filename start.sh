@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 🚀 Transcript App Startup Script
-# This script starts all services needed for the app
+# This script starts ALL services in the background
 
 set -e
 
@@ -12,6 +12,7 @@ echo ""
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Check if Docker is running
@@ -20,19 +21,19 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
-# Check if Ollama is running
+# Check if Ollama is running, if not start it
 if ! curl -s http://localhost:11434/v1/models > /dev/null 2>&1; then
-    echo -e "${YELLOW}⚠️  Ollama is not running.${NC}"
-    echo "   Please start Ollama in another terminal: ollama serve"
-    echo "   Or install it: https://ollama.ai"
-    echo ""
-    read -p "Press Enter when Ollama is running, or Ctrl+C to exit..."
+    echo -e "${YELLOW}⚠️  Ollama is not running. Starting Ollama...${NC}"
+    ollama serve > /dev/null 2>&1 &
+    OLLAMA_PID=$!
+    echo -e "${GREEN}   ✅ Ollama started (PID: $OLLAMA_PID)${NC}"
+    sleep 2
 fi
 
 # Start Elasticsearch
-echo -e "${GREEN}1. Starting Elasticsearch...${NC}"
+echo -e "${BLUE}1. Starting Elasticsearch...${NC}"
 cd backend
-docker-compose up -d
+docker-compose up -d > /dev/null 2>&1
 cd ..
 
 # Wait for Elasticsearch to be ready
@@ -49,23 +50,50 @@ for i in {1..30}; do
     sleep 1
 done
 
+# Start Backend
+echo -e "${BLUE}2. Starting Backend (FastAPI)...${NC}"
+cd backend
+source venv/bin/activate
+uvicorn app:app --reload > ../backend.log 2>&1 &
+BACKEND_PID=$!
+cd ..
+echo -e "${GREEN}   ✅ Backend started (PID: $BACKEND_PID)${NC}"
+echo -e "${YELLOW}   Logs: backend.log${NC}"
+
+# Wait a bit for backend to start
+sleep 3
+
+# Start Frontend
+echo -e "${BLUE}3. Starting Frontend (React)...${NC}"
+cd frontend
+npm run dev > ../frontend.log 2>&1 &
+FRONTEND_PID=$!
+cd ..
+echo -e "${GREEN}   ✅ Frontend started (PID: $FRONTEND_PID)${NC}"
+echo -e "${YELLOW}   Logs: frontend.log${NC}"
+
+# Wait for frontend to be ready
+echo -e "${YELLOW}   Waiting for frontend to be ready...${NC}"
+sleep 5
+
 echo ""
-echo -e "${GREEN}✅ All services started!${NC}"
+echo -e "${GREEN}✅ All services started successfully!${NC}"
 echo ""
-echo "📋 Next steps:"
+echo "📋 Services:"
+echo -e "   ${BLUE}Frontend:${NC}      http://localhost:5173"
+echo -e "   ${BLUE}Backend API:${NC}   http://localhost:8000"
+echo -e "   ${BLUE}API Docs:${NC}      http://localhost:8000/docs"
+echo -e "   ${BLUE}Elasticsearch:${NC} http://localhost:9200"
 echo ""
-echo "   Terminal 1 (Backend):"
-echo "   $ cd backend"
-echo "   $ source venv/bin/activate"
-echo "   $ uvicorn app:app --reload"
+echo "📊 Process IDs:"
+echo "   Backend:  $BACKEND_PID"
+echo "   Frontend: $FRONTEND_PID"
 echo ""
-echo "   Terminal 2 (Frontend):"
-echo "   $ cd frontend"
-echo "   $ npm run dev"
+echo "📝 Logs:"
+echo "   Backend:  tail -f backend.log"
+echo "   Frontend: tail -f frontend.log"
 echo ""
-echo "   Then open: http://localhost:5173"
-echo ""
-echo "🛑 To stop Elasticsearch:"
-echo "   $ cd backend && docker-compose down"
+echo "🛑 To stop all services:"
+echo "   ./stop.sh"
 echo ""
 
