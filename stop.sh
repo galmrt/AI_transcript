@@ -11,13 +11,18 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-# Stop Frontend (React/Vite on port 5173)
+# Stop Frontend (React/Vite - check multiple ports)
 echo -e "${YELLOW}1. Stopping Frontend...${NC}"
-FRONTEND_PID=$(lsof -ti:5173)
-if [ ! -z "$FRONTEND_PID" ]; then
-    kill $FRONTEND_PID 2>/dev/null
-    echo -e "${GREEN}   ✅ Frontend stopped${NC}"
-else
+STOPPED=0
+for PORT in 5173 5174 5175 3000; do
+    FRONTEND_PID=$(lsof -ti:$PORT 2>/dev/null)
+    if [ ! -z "$FRONTEND_PID" ]; then
+        kill $FRONTEND_PID 2>/dev/null
+        echo -e "${GREEN}   ✅ Frontend stopped (port $PORT)${NC}"
+        STOPPED=1
+    fi
+done
+if [ $STOPPED -eq 0 ]; then
     echo -e "${YELLOW}   ⚠️  Frontend not running${NC}"
 fi
 
