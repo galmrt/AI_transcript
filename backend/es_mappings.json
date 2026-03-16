@@ -1,0 +1,11 @@
+{
+    "properties" : {
+        "raw_transcript" : {"type" : "text"},
+        "title" : {"type" : "text"},
+        "input_type" : {"type" : "keyword"},
+        "@timestamp" : {"type" : "date"},
+        "audio_url" : {"type" : "keyword"},
+        "cleaned_transcript" : {"type" : "text"},
+        "cleaned_transcript_vector" : {"type" : "text"}
+    }
+}
