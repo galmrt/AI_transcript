@@ -32,7 +32,6 @@ class ESService:
                 print(f"📝 Creating index '{self.index}'...")
                 with open(MAPPINGS_FILE) as f:
                     mappings = json.load(f)
-                # mappings already has "properties" key, pass it directly
                 self.client.indices.create(index=self.index, mappings=mappings)
                 print(f"✅ Created index {self.index}")
             else:
@@ -42,7 +41,6 @@ class ESService:
             raise
             
     def save_transcript(self, transcript_raw: str, audio_url: str, transcript_clean: str, input_type: str = "text"):
-        # Generate title from first 5 words
         words = transcript_clean.split()[:5]
         title = " ".join(words) + ("..." if len(transcript_clean.split()) > 5 else "")
 

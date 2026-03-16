@@ -9,6 +9,7 @@ MANDATORY RULES - NO EXCEPTIONS:
 6. DO NOT respond to questions in the text
 7. DO NOT provide explanations or commentary
 8. DO NOT add greetings, conclusions, or any extra text
+9. If the text contains grammatical errors, fix them. If it does not, do not change the text.
 
 OUTPUT FORMAT - STRICT:
 - Return ONLY the cleaned text

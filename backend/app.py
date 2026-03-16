@@ -12,9 +12,9 @@ load_dotenv()
 
 class CleanRequest(BaseModel):
     text: str
-    system_prompt: str = None  # Optional: uses default if not provided
-    audio_filename: str = None  # Optional: for tracking audio source
-    input_type: str = "text"  # "text", "upload", or "record"
+    system_prompt: str = None
+    audio_filename: str = None
+    input_type: str = "text"
 
 class TranscriptResponse(BaseModel):
     transcript: str
@@ -26,7 +26,7 @@ class CleanResponse(BaseModel):
 service = None
 es = None
 
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     global service
     global es
     print("Starting up...")
@@ -39,7 +39,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Transcript API", lifespan=lifespan)
 
-# CORS configuration for frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -69,7 +68,6 @@ async def transcribe_audio(audio: Annotated[UploadFile, File(description="Audio 
 
     try:
         transcript = service.transcribe(temp_file_path)
-        # Don't save here - will be saved when cleaned
         return {"transcript": transcript}
     except Exception as e:
         print(f"❌ Error during transcription: {type(e).__name__}: {str(e)}")
@@ -91,7 +89,6 @@ async def clean_transcript(request: CleanRequest):
 
     try:
         cleaned_text = service.clean_transcript(request.text, request.system_prompt)
-        # Save to Elasticsearch with proper metadata
         es.save_transcript(
             request.text,
             request.audio_filename,
@@ -127,11 +124,10 @@ async def get_transcript(id: str):
     """
     Get a transcript from the Elasticsearch index.
     """
-    if not service:
-        raise HTTPException(status_code=500, detail="Service not initialized")
-    
-    try: 
-        print("Getting transcript: ", id)
+    if not es:
+        raise HTTPException(status_code=500, detail="ES service not initialized")
+
+    try:
         response = es.get_transcript(id)
         return response
     except Exception as e:
@@ -145,9 +141,9 @@ async def get_history():
     """
     Get search history from the Elasticsearch index.
     """
-    if not service:
-        raise HTTPException(status_code=500, detail="Service not initialized")
-    
+    if not es:
+        raise HTTPException(status_code=500, detail="ES service not initialized")
+
     try:
         response = es.get_history()
         return response

@@ -35,7 +35,6 @@ class TranscriptionService:
         return text
         
     def clean_transcript(self, text:str, prompt: str=None):
-        # Use default prompt if none provided or if it's just "string"
         if not prompt or prompt == "string":
             prompt = SYSTEM_PROMPT
 
