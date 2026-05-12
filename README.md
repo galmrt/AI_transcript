@@ -79,7 +79,6 @@ npm run dev
 Open [http://localhost:5173](http://localhost:5173)
 
 **📖 Detailed Instructions:** See [START_APP.md](./START_APP.md)
-** Project is inspired by https://github.com/AI-Engineer-Skool/local-ai-transcript-app/tree/main ** 
 
 ## �️ Architecture
 
